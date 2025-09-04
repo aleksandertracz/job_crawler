@@ -48,7 +48,7 @@ def read_master_file(master_filename):
 
 # Function to add the new job links to the new file if not repeated in the master file
 def add_new_job_links(job_links, new_file_path, existing_job_links):
-    with open(new_file_path, "a") as f:
+    with open(new_file_path, "w") as f:
         for link in job_links:
             if link not in existing_job_links:
                 f.write(f"{link}\n")
