@@ -18,18 +18,28 @@ def check_keywords(job_url, kws):
     return False
 
 # Function to fetch the job links
-def fetch_job_links(url_searched, no_pages, kws):
+def fetch_job_links(website, no_pages, kws):
     # Initialize the job links list
     job_links = []
+    # List URLs of each website
+    urls = {
+        "eldorado": "https://czyjesteldorado.pl/search?q=&page=",
+        "pracuj": "https://it.pracuj.pl/praca?pn="
+    }
+    # Dict of job url patterns for each website
+    job_url_patterns = {
+        "eldorado": re.compile(r"^https://czyjesteldorado.pl/praca/\d+-[\w-]+$"),
+        "pracuj": re.compile(r"^https://www.pracuj.pl/praca/[\w-]+,oferta,\d+$"),
+    }
     # Loop through the pages
     for page in range(no_pages):
-        url = f"{url_searched}&page={page}"
+        url = f"{urls[website]}{page}"
         response = requests.get(url)
         response.raise_for_status()  # Raise error if something went wrong   
         # Initiate the BeautifulSoup object
         soup = BeautifulSoup(response.text, "html.parser")
         # Regex pattern for job URLs
-        job_url_pattern = re.compile(r"^https://czyjesteldorado.pl/praca/\d+-[\w-]+$")
+        job_url_pattern = job_url_patterns[website]
         # Extract all <a> links
         for a_tag in soup.find_all("a", href=True):
             href = a_tag["href"]
@@ -91,22 +101,20 @@ def save_job_links(job_links, path, filename):
 
 # Run the scraper
 if __name__ == "__main__":
-
-    # Set the url to fetch the job links
-    url = f"https://czyjesteldorado.pl/search?q="
+    # Set the dictionary of websites to search for
+    websites = ["eldorado", "pracuj"]
     # # Set the number of pages to fetch
     pages = 10
     # Set the keywords to search for
     keywords = ["python", "data", "risk", "quant", "quantitative", "analytics"]
     # Set the path to save the job links
     path = "links"
-    # Set the filename to save the job links
-    filename = "job_links_eldorado.txt"
+    # Set the filename to save the job links, without the extension
+    filename = "job_links"
 
-    links = fetch_job_links(url, pages, keywords)
-    print(f"Found {len(links)} job links:")
-    for link in links:
-        print(link)
-
-    # Save the job links to the file
-    save_job_links(links, path, filename)
+    for website in websites:
+        print(f"Fetching job links from {website}")
+        links = fetch_job_links(website, pages, keywords)
+        print(f"Found {len(links)} job links")
+        # Save the job links to the file
+        save_job_links(links, path, filename + "_" + website)
